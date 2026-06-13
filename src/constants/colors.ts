@@ -78,7 +78,7 @@ const Colors = {
   // ============================================
   overlay: "rgba(0, 0, 0, 0.7)", // background modal/dialog
   overlayLight: "rgba(0, 0, 0, 0.4)", // overlay lebih ringan
-};
+} as const;
 
 // ============================================
 // TEMA SIAP PAKAI
