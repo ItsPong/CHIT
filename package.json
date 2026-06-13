@@ -2,6 +2,7 @@
   "name": "chit",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.28.0",
   "dependencies": {
     "@expo/ui": "~56.0.16",
     "@expo/vector-icons": "^15.0.2",
@@ -20,6 +21,7 @@
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
+    "nativewind": "^4.2.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -33,15 +35,21 @@
   "devDependencies": {
     "@expo/ngrok": "^4.1.0",
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~56.0.4",
+    "tailwindcss": "^3.4.19",
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "dev": "expo start",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "build:web": "expo export --platform web",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }
