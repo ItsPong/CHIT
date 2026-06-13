@@ -1,2 +1,3 @@
-import BantuanScreen from '../../screens/BantuanScreen';
+import BantuanScreen from '@/screens/BantuanScreen';
+
 export default BantuanScreen;
