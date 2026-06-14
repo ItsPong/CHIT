@@ -1,2 +1,3 @@
-import KoleksikuScreen from '../../screens/KoleksikuScreen';
+import KoleksikuScreen from '@/screens/KoleksikuScreen';
+
 export default KoleksikuScreen;

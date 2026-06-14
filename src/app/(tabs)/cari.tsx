@@ -1,2 +1,3 @@
-import CariScreen from '../../screens/CariScreen';
+import CariScreen from '@/screens/CariScreen';
+
 export default CariScreen;

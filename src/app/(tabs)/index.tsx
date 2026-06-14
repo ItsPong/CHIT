@@ -1,2 +1,3 @@
-import BerandaScreen from '../../screens/BerandaScreen';
+import BerandaScreen from '@/screens/BerandaScreen';
+
 export default BerandaScreen;

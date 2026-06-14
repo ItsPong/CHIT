@@ -1,56 +1,91 @@
-# Welcome to your Expo app 👋
+# CHIT
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+CHIT adalah aplikasi informasi dan bantuan hukum yang dirancang dengan
+aksesibilitas pengguna tunanetra sebagai kebutuhan utama.
 
-## Get started
+## Teknologi
 
-1. Install dependencies
+- Expo SDK 56
+- React Native
+- Expo Router
+- TypeScript
+- NativeWind
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Menjalankan proyek
 
 ```bash
-npm run reset-project
+pnpm install
+pnpm dev
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Gunakan salah satu perintah berikut untuk platform tertentu:
 
-### Other setup steps
+```bash
+pnpm android
+pnpm ios
+pnpm web
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## PWA
 
-## Learn more
+Target web CHIT dikonfigurasi sebagai Progressive Web App:
 
-To learn more about developing your project with Expo, look at the following resources:
+- Tampilan desktop dibatasi ke viewport ponsel dengan lebar maksimum 430 px.
+- Manifest, ikon instalasi, dan metadata aplikasi tersedia di folder `public`.
+- Service worker aktif pada build produksi untuk cache aplikasi dan akses offline dasar.
+- Navigasi web menggunakan fallback SPA yang dikonfigurasi melalui `vercel.json`.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Build produksi:
 
-## Join the community
+```bash
+pnpm icons:pwa
+pnpm build:web
+```
 
-Join our community of developers creating universal apps.
+Hasil build tersedia di folder `dist`. Service worker tidak didaftarkan saat
+menjalankan `pnpm web` agar cache produksi tidak mengganggu proses development.
+Untuk menguji instalasi dan mode offline, jalankan hasil build melalui server
+lokal atau deploy ke Vercel.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Data hukum
+
+Sumber utama konten hukum berada di `full.md`. File tersebut memuat dokumen,
+pasal asli, bahasa sederhana, keyword, dan routing kebutuhan pengguna.
+
+Data aplikasi dihasilkan secara otomatis ke
+`src/data/legalContent.generated.json` melalui:
+
+```bash
+pnpm data:generate
+```
+
+Perintah development dan build sudah menjalankan generator ini secara otomatis.
+Jangan mengedit file JSON hasil generate secara manual.
+
+## Pemeriksaan kode
+
+```bash
+pnpm typecheck
+pnpm lint
+```
+
+## Struktur
+
+```text
+src/
+├── app/         # Route dan layout Expo Router
+├── constants/   # Design tokens
+├── screens/     # Implementasi layar
+└── global.css   # Entry CSS NativeWind
+```
+
+Route harus tetap tipis. Logika dan tampilan utama ditempatkan di `screens`,
+sedangkan komponen yang dipakai ulang dapat ditambahkan ke `components`.
+
+## Prinsip aksesibilitas
+
+- Setiap kontrol interaktif harus memiliki `accessibilityRole` dan label yang jelas.
+- Jangan mengandalkan warna saja untuk menyampaikan status.
+- Urutan fokus pembaca layar harus mengikuti urutan visual dan alur tugas.
+- Target sentuh minimal 44 x 44 poin.
+- Uji perubahan penting dengan TalkBack dan VoiceOver.
