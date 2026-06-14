@@ -13,21 +13,22 @@ import {
 import AppHeader from '@/components/AppHeader';
 import Colors from '@/constants/colors';
 import {
+  legalDisclaimer,
   searchLegalMaterials,
-  type LegalMaterial,
+  type LegalSearchResult,
 } from '@/data/legalMaterials';
 import useCollection from '@/hooks/useCollection';
 import useVoiceSearch from '@/hooks/useVoiceSearch';
 import { speak } from '@/services/speech';
 
 const SUGGESTIONS = [
-  'Apa hak tunanetra?',
-  'Aksesibilitas fasilitas umum',
-  'Cara melapor diskriminasi',
+  'Aku ditolak kerja karena tunanetra',
+  'Kampus tidak kasih materi yang bisa dibaca screen reader',
+  'Trotoar guiding block rusak dan ketutup motor',
 ];
 
 type ResultCardProps = {
-  material: LegalMaterial;
+  result: LegalSearchResult;
   expanded: boolean;
   saved: boolean;
   onListen: () => void;
@@ -36,20 +37,36 @@ type ResultCardProps = {
 };
 
 function ResultCard({
-  material,
+  result,
   expanded,
   saved,
   onListen,
   onToggleDetails,
   onSave,
 }: ResultCardProps) {
+  const { material, articles, category, shortAnswer } = result;
+
   return (
     <View style={styles.resultCard}>
-      <Text style={styles.resultTopic}>{material.topic.toUpperCase()}</Text>
+      <Text style={styles.resultTopic}>
+        {(category ?? 'MATERI HUKUM TERKAIT').toUpperCase()}
+      </Text>
       <Text style={styles.resultTitle} accessibilityRole="header">
         {material.shortTitle}
       </Text>
+      <Text style={styles.resultStatus}>
+        Status: {material.status.replaceAll('_', ' ')}
+      </Text>
       <Text style={styles.resultSummary}>{material.summary}</Text>
+      {shortAnswer && (
+        <View style={styles.shortAnswer}>
+          <Text style={styles.shortAnswerLabel}>Jawaban singkat</Text>
+          <Text style={styles.shortAnswerText}>{shortAnswer}</Text>
+        </View>
+      )}
+      <Text style={styles.matchCount}>
+        {articles.length} pasal atau kelompok pasal relevan
+      </Text>
 
       <TouchableOpacity
         style={styles.primaryAction}
@@ -109,11 +126,24 @@ function ResultCard({
 
       {expanded && (
         <View style={styles.materialDetails}>
+          {material.statusNotes.length > 0 && (
+            <View style={styles.statusNotes}>
+              <Text style={styles.statusNotesTitle}>Catatan status</Text>
+              {material.statusNotes.map((note) => (
+                <Text key={note} style={styles.statusNote}>
+                  • {note}
+                </Text>
+              ))}
+            </View>
+          )}
           <Text style={styles.materialHeading}>Materi terkait</Text>
-          {material.articles.map((article) => (
-            <View key={article.title} style={styles.article}>
+          {articles.map((article) => (
+            <View key={article.id} style={styles.article}>
               <Text style={styles.articleTitle}>{article.title}</Text>
-              <Text style={styles.articleContent}>{article.content}</Text>
+              <Text style={styles.articleLabel}>Bahasa sederhana</Text>
+              <Text style={styles.articleContent}>{article.simpleText}</Text>
+              <Text style={styles.originalLabel}>Teks pasal asli</Text>
+              <Text style={styles.originalText}>{article.originalText}</Text>
             </View>
           ))}
         </View>
@@ -125,7 +155,7 @@ function ResultCard({
 export default function CariScreen() {
   const [query, setQuery] = useState('');
   const [searchedQuery, setSearchedQuery] = useState('');
-  const [results, setResults] = useState<LegalMaterial[]>([]);
+  const [results, setResults] = useState<LegalSearchResult[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [status, setStatus] = useState(
     'Ketik pertanyaan atau gunakan tombol mikrofon untuk mulai mencari.'
@@ -155,7 +185,10 @@ export default function CariScreen() {
 
     const message =
       matches.length > 0
-        ? `Ditemukan ${matches.length} materi hukum terkait.`
+        ? `Ditemukan ${matches.reduce(
+            (total, result) => total + result.articles.length,
+            0
+          )} pasal terkait dari ${matches.length} dokumen hukum.`
         : 'Materi yang sesuai belum ditemukan. Coba gunakan kata kunci lain.';
     setStatus(message);
     speak(message);
@@ -174,12 +207,17 @@ export default function CariScreen() {
     onStatusChange: announceStatus,
   });
 
-  const listenToMaterial = (material: LegalMaterial) => {
-    speak(`${material.title}. ${material.summary}`);
-    setStatus(`Sedang membacakan ${material.shortTitle}.`);
+  const listenToMaterial = (result: LegalSearchResult) => {
+    const relevantText = result.articles
+      .map((article) => `${article.title}. ${article.simpleText}`)
+      .join(' ');
+    speak(
+      `${result.material.title}. ${result.shortAnswer ?? result.material.summary}. ${relevantText}`
+    );
+    setStatus(`Sedang membacakan ${result.material.shortTitle}.`);
   };
 
-  const saveMaterial = (material: LegalMaterial) => {
+  const saveMaterial = (material: LegalSearchResult['material']) => {
     const saved = save(material);
     const message = saved
       ? `${material.shortTitle} berhasil disimpan ke koleksi.`
@@ -270,6 +308,8 @@ export default function CariScreen() {
           <Text style={styles.statusText}>{status}</Text>
         </View>
 
+        <Text style={styles.disclaimer}>{legalDisclaimer}</Text>
+
         {!searchedQuery && (
           <View style={styles.suggestions}>
             <Text style={styles.sectionTitle}>Contoh pencarian</Text>
@@ -293,19 +333,19 @@ export default function CariScreen() {
             <Text style={styles.sectionTitle} accessibilityRole="header">
               Hasil untuk “{searchedQuery}”
             </Text>
-            {results.map((material) => (
+            {results.map((result) => (
               <ResultCard
-                key={material.id}
-                material={material}
-                expanded={expandedId === material.id}
-                saved={isSaved(material.id)}
-                onListen={() => listenToMaterial(material)}
+                key={result.material.id}
+                result={result}
+                expanded={expandedId === result.material.id}
+                saved={isSaved(result.material.id)}
+                onListen={() => listenToMaterial(result)}
                 onToggleDetails={() =>
                   setExpandedId((current) =>
-                    current === material.id ? null : material.id
+                    current === result.material.id ? null : result.material.id
                   )
                 }
-                onSave={() => saveMaterial(material)}
+                onSave={() => saveMaterial(result.material)}
               />
             ))}
           </View>
@@ -465,11 +505,45 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     marginBottom: 9,
   },
+  resultStatus: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 10,
+    textTransform: 'capitalize',
+  },
   resultSummary: {
     color: Colors.backgroundCream,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 16,
+  },
+  shortAnswer: {
+    backgroundColor: Colors.primaryWarm,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.primaryBright,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 14,
+  },
+  shortAnswerLabel: {
+    color: Colors.primaryBright,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: 5,
+    textTransform: 'uppercase',
+  },
+  shortAnswerText: {
+    color: Colors.backgroundCream,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  matchCount: {
+    color: Colors.textWhite,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 14,
   },
   primaryAction: {
     minHeight: 50,
@@ -527,8 +601,29 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 12,
   },
-  article: {
+  statusNotes: {
+    backgroundColor: Colors.primaryWarm,
+    borderRadius: 8,
+    padding: 12,
     marginBottom: 16,
+  },
+  statusNotesTitle: {
+    color: Colors.primaryBright,
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  statusNote: {
+    color: Colors.backgroundCream,
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 3,
+  },
+  article: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    paddingBottom: 18,
+    marginBottom: 18,
   },
   articleTitle: {
     color: Colors.textWhite,
@@ -537,9 +632,35 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 5,
   },
+  articleLabel: {
+    color: Colors.primaryBright,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 5,
+    textTransform: 'uppercase',
+  },
   articleContent: {
-    color: Colors.backgroundSand,
+    color: Colors.backgroundCream,
     fontSize: 13,
     lineHeight: 20,
+    marginBottom: 14,
+  },
+  originalLabel: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
+    marginBottom: 5,
+    textTransform: 'uppercase',
+  },
+  originalText: {
+    color: Colors.backgroundSand,
+    fontSize: 12,
+    lineHeight: 19,
+  },
+  disclaimer: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    lineHeight: 17,
+    marginBottom: 26,
   },
 });

@@ -23,7 +23,9 @@ type SavedItemProps = {
 function SavedItem({ material, onListen, onRemove }: SavedItemProps) {
   return (
     <View style={styles.savedCard}>
-      <Text style={styles.savedTopic}>{material.topic.toUpperCase()}</Text>
+      <Text style={styles.savedTopic}>
+        {material.status.replaceAll('_', ' ').toUpperCase()}
+      </Text>
       <Text style={styles.savedTitle}>{material.shortTitle}</Text>
       <Text style={styles.savedSummary}>{material.summary}</Text>
       <View style={styles.actionRow}>
@@ -114,12 +116,14 @@ export default function KoleksikuScreen() {
             key={material.id}
             style={styles.popularItem}
             accessible
-            accessibilityLabel={`${index + 1}. ${material.shortTitle}. ${material.topic}`}
+            accessibilityLabel={`${index + 1}. ${material.shortTitle}. ${material.summary}`}
           >
             <Text style={styles.rank}>0{index + 1}</Text>
             <View style={styles.popularContent}>
               <Text style={styles.popularTitle}>{material.shortTitle}</Text>
-              <Text style={styles.popularTopic}>{material.topic}</Text>
+              <Text style={styles.popularTopic}>
+                {material.articles.length} materi pasal
+              </Text>
             </View>
           </View>
         ))}
