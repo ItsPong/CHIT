@@ -47,6 +47,21 @@ menjalankan `pnpm web` agar cache produksi tidak mengganggu proses development.
 Untuk menguji instalasi dan mode offline, jalankan hasil build melalui server
 lokal atau deploy ke Vercel.
 
+## Data hukum
+
+Sumber utama konten hukum berada di `full.md`. File tersebut memuat dokumen,
+pasal asli, bahasa sederhana, keyword, dan routing kebutuhan pengguna.
+
+Data aplikasi dihasilkan secara otomatis ke
+`src/data/legalContent.generated.json` melalui:
+
+```bash
+pnpm data:generate
+```
+
+Perintah development dan build sudah menjalankan generator ini secara otomatis.
+Jangan mengedit file JSON hasil generate secara manual.
+
 ## Pemeriksaan kode
 
 ```bash
