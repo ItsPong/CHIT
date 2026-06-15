@@ -1,26 +1,30 @@
-const CACHE_NAME = 'chit-shell-v1';
-const APP_SHELL = [
+const CACHE_VERSION = 'chit-v12';
+const PAGE_CACHE = `${CACHE_VERSION}-pages`;
+const ASSET_CACHE = `${CACHE_VERSION}-assets`;
+const PRECACHE_URLS = [
+  '/',
+  '/pencarian',
+  '/koleksi',
+  '/bantuan',
+  '/offline',
   '/manifest.webmanifest',
   '/icons/pwa-192x192.png',
   '/icons/pwa-512x512.png',
+  '/icons/pwa-maskable-512x512.png',
+  '/icons/apple-touch-icon.png',
 ];
 
-async function precacheAppShell() {
-  const cache = await caches.open(CACHE_NAME);
-  const response = await fetch('/');
-  const html = await response.clone().text();
-  const assetPaths = Array.from(
-    html.matchAll(/(?:href|src)="(\/[^"]+)"/g),
-    (match) => match[1]
-  ).filter((path) => !path.startsWith('/sw.js'));
-
-  await cache.put('/', response);
-  await cache.addAll([...APP_SHELL, ...new Set(assetPaths)]);
-}
-
 self.addEventListener('install', (event) => {
-  event.waitUntil(precacheAppShell());
+  event.waitUntil(
+    caches.open(PAGE_CACHE).then((cache) => cache.addAll(PRECACHE_URLS))
+  );
   self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,50 +33,50 @@ self.addEventListener('activate', (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+          keys
+            .filter((key) => !key.startsWith(CACHE_VERSION))
+            .map((key) => caches.delete(key))
         )
       )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
 
-  if (request.method !== 'GET') {
-    return;
-  }
+  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          caches.open(PAGE_CACHE).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() =>
-          caches.match(request).then((cachedResponse) => cachedResponse || caches.match('/'))
-        )
+        .catch(async () => {
+          return (
+            (await caches.match(request)) ||
+            (await caches.match('/offline')) ||
+            (await caches.match('/'))
+          );
+        })
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    caches.match(request).then(
+      (cachedResponse) =>
+        cachedResponse ||
+        fetch(request).then((response) => {
+          if (!response || response.status !== 200) return response;
 
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200 || response.type === 'opaque') {
+          const copy = response.clone();
+          caches.open(ASSET_CACHE).then((cache) => cache.put(request, copy));
           return response;
-        }
-
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        return response;
-      });
-    })
+        })
+    )
   );
 });
