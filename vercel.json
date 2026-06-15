@@ -1,26 +1,3 @@
 {
-  "buildCommand": "pnpm build:web",
-  "outputDirectory": "dist",
-  "framework": null,
-  "cleanUrls": true,
-  "headers": [
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/"
-    }
-  ]
+  "framework": "nextjs"
 }
