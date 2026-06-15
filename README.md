@@ -38,6 +38,12 @@ Pengguna dapat:
 4. CHIT akan menyebutkan jumlah pasal dan dokumen yang ditemukan.
 5. Pilih **Lihat Materi**, **Dengarkan**, atau **Simpan**.
 
+Pada halaman Pencarian, tombol mikrofon juga menerima perintah lanjutan:
+
+- `bacakan` untuk membacakan semua pasal pada hasil pencarian aktif.
+- `simpan` untuk menyimpan pasal yang terakhir dibacakan ke Koleksi.
+- Kalimat lain dianggap sebagai pertanyaan atau materi yang ingin dicari.
+
 Pengguna tidak harus mengetahui istilah hukum. Kalimat seperti berikut dapat
 langsung digunakan:
 
@@ -508,10 +514,13 @@ Tombol ini memakai fitur text-to-speech dari browser atau perangkat.
 
 ### Simpan
 
-Menyimpan dokumen hukum ke menu **Koleksi**.
+Menyimpan pasal hukum yang relevan ke menu **Koleksi**.
 
 - Jika berhasil, CHIT mengumumkan bahwa materi sudah disimpan.
 - Jika materi sudah pernah disimpan, CHIT mengumumkan bahwa materi sudah ada.
+- Pasal baru dari dokumen yang sama akan ditambahkan ke kartu koleksi yang sudah
+  ada.
+- Menekan kartu koleksi akan membacakan pasal yang tersimpan.
 - Pada web, Koleksi disimpan di `localStorage` browser yang sedang digunakan.
 - Jika penyimpanan browser diblokir, Koleksi hanya bertahan selama aplikasi aktif.
 
@@ -613,7 +622,11 @@ tekan tombol pencarian.
 
 ## Panduan Pembaca Layar
 
-- Navigasi utama berada di bagian bawah: Beranda, Cari, Koleksi, dan Bantuan.
+- Pada HP, navigasi utama berada di bagian bawah: Beranda, Pencarian, Koleksi,
+  dan Bantuan.
+- Pada desktop, navigasi utama berada di sidebar kiri.
+- Tombol **Navigasi Suara** menerima perintah sederhana seperti `ke home`,
+  `buka pencarian`, `buka koleksi`, dan `ke bantuan`.
 - Setiap tombol memiliki label aksesibilitas.
 - Status pencarian diumumkan melalui live region.
 - Gunakan navigasi heading untuk berpindah ke judul hasil.
@@ -621,8 +634,7 @@ tekan tombol pencarian.
   Dengarkan, dan Simpan.
 - Detail materi disusun dengan urutan judul pasal, bahasa sederhana, lalu teks
   pasal asli.
-- Pada desktop, tampilan tetap dibatasi seperti layar ponsel agar alurnya
-  konsisten.
+- Pada desktop, konten menggunakan layout web penuh dengan sidebar dan grid.
 
 Pengujian aksesibilitas tetap disarankan menggunakan TalkBack di Android,
 VoiceOver di iOS, atau pembaca layar desktop.
@@ -650,14 +662,11 @@ pnpm install
 
 | Command | Yang terjadi |
 | --- | --- |
-| `pnpm dev` | Membuat ulang data hukum lalu membuka Expo development server |
-| `pnpm start` | Sama seperti `pnpm dev` |
-| `pnpm web` | Membuat ulang data lalu menjalankan CHIT sebagai web lokal |
-| `pnpm android` | Membuat ulang data lalu membuka CHIT di Android atau emulator |
-| `pnpm ios` | Membuat ulang data lalu membuka CHIT di iOS Simulator |
+| `pnpm dev` | Membuat ulang data hukum lalu membuka Next.js development server |
+| `pnpm build` | Membuat ulang data hukum lalu membuat production build |
+| `pnpm start` | Menjalankan production build Next.js |
 | `pnpm data:generate` | Membaca `full.md` dan membuat data JSON aplikasi |
 | `pnpm icons:pwa` | Membuat ulang ikon instalasi PWA |
-| `pnpm build:web` | Membuat build produksi web di folder `dist` |
 | `pnpm typecheck` | Memeriksa kesalahan tipe TypeScript tanpa membuat build |
 | `pnpm lint` | Memeriksa kualitas dan konsistensi kode |
 
@@ -665,25 +674,22 @@ pnpm install
 
 ```bash
 pnpm install
-pnpm web
+pnpm dev
 ```
 
-Expo akan menampilkan alamat lokal yang dapat dibuka melalui browser.
+Next.js akan menampilkan alamat lokal yang dapat dibuka melalui browser.
 
 ### Membuat build PWA
 
 ```bash
 pnpm icons:pwa
-pnpm build:web
+pnpm build
+pnpm start
 ```
 
-Hasil build berada di folder:
-
-```text
-dist/
-```
-
-Folder tersebut dapat digunakan untuk deployment ke Vercel.
+Next.js menyimpan hasil build di `.next/`. Untuk deployment, hubungkan
+repository ke Vercel atau platform Node.js lain dan gunakan command
+`pnpm build`.
 
 ## Mengelola Data Hukum
 
@@ -715,7 +721,7 @@ src/data/legalContent.generated.json
 ```
 
 Jangan mengedit JSON hasil generator secara manual karena isinya akan ditimpa
-saat `pnpm dev`, `pnpm web`, atau `pnpm build:web` dijalankan.
+saat `pnpm dev` atau `pnpm build` dijalankan.
 
 Dataset saat ini berisi:
 
@@ -725,11 +731,14 @@ Dataset saat ini berisi:
 
 ## PWA
 
-- Tampilan desktop dibatasi ke viewport ponsel dengan lebar maksimum 430 px.
-- Manifest, ikon instalasi, dan metadata tersedia di folder `public`.
+- Tampilan mobile mempertahankan navigasi bawah dan bahasa visual CHIT.
+- Tampilan desktop menggunakan sidebar dan layout web responsif.
+- Manifest dibuat melalui `src/app/manifest.ts`.
+- Ikon instalasi tersedia di `public/icons`.
 - Service worker aktif pada build produksi untuk cache dan akses offline dasar.
-- Navigasi web memakai fallback SPA melalui `vercel.json`.
-- Hasil `pnpm build:web` dapat di-deploy ke Vercel.
+- Halaman utama, Pencarian, Koleksi, Bantuan, dan fallback offline diprecache.
+- Deployment produksi harus menggunakan HTTPS agar instalasi PWA, service
+  worker, dan izin mikrofon bekerja dengan benar.
 
 Service worker tidak didaftarkan saat development agar cache produksi tidak
 mengganggu perubahan terbaru. Instalasi dan mode offline perlu diuji melalui
@@ -737,24 +746,21 @@ build produksi.
 
 ## Teknologi
 
-- Expo SDK 56
-- React Native dan React Native Web
-- Expo Router
+- Next.js 16 App Router
+- React 19
 - TypeScript
-- NativeWind
+- Web Speech API
+- Service Worker dan Web App Manifest
 
 ## Struktur Proyek
 
 ```text
 src/
-├── app/         # Route dan layout Expo Router
+├── app/         # Route, layout, manifest, dan CSS Next.js App Router
 ├── components/  # Komponen yang digunakan ulang
-├── constants/   # Design tokens
 ├── data/        # Dataset hukum hasil generator
 ├── hooks/       # Voice search dan hook aplikasi
-├── screens/     # Implementasi layar
-├── services/    # Text-to-speech dan layanan aplikasi
-└── global.css   # Entry CSS NativeWind
+└── services/    # Text-to-speech dan layanan aplikasi
 ```
 
 ## Prinsip Aksesibilitas
