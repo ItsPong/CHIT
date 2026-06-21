@@ -139,8 +139,10 @@ export default function useVoiceSearch({
 
     const announced = speak(prompt, {
       onEnd: () => {
-        promptFinished = true;
-        beginRecognition();
+        setTimeout(() => {
+          promptFinished = true;
+          beginRecognition();
+        }, 3000);
       },
     });
 
@@ -148,7 +150,7 @@ export default function useVoiceSearch({
       promptTimerRef.current = setTimeout(() => {
         promptFinished = true;
         beginRecognition();
-      }, 3200);
+      }, 6500);
     } else {
       promptFinished = true;
     }
