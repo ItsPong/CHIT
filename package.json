@@ -1,47 +1,27 @@
 {
   "name": "chit",
-  "main": "expo-router/entry",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.28.0",
   "dependencies": {
-    "@expo/ui": "~56.0.16",
-    "@expo/vector-icons": "^15.0.2",
-    "@react-navigation/bottom-tabs": "^7.17.1",
-    "@react-navigation/native": "^7.3.0",
-    "expo": "~56.0.9",
-    "expo-constants": "~56.0.17",
-    "expo-device": "~56.0.4",
-    "expo-font": "~56.0.5",
-    "expo-glass-effect": "~56.0.4",
-    "expo-image": "~56.0.10",
-    "expo-linking": "~56.0.13",
-    "expo-router": "~56.2.9",
-    "expo-splash-screen": "~56.0.10",
-    "expo-status-bar": "~56.0.4",
-    "expo-symbols": "~56.0.6",
-    "expo-system-ui": "~56.0.5",
-    "expo-web-browser": "~56.0.5",
+    "next": "16.2.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "react-native": "0.85.3",
-    "react-native-gesture-handler": "~2.31.1",
-    "react-native-reanimated": "4.3.1",
-    "react-native-safe-area-context": "~5.7.0",
-    "react-native-screens": "4.25.2",
-    "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@expo/ngrok": "^4.1.0",
     "@types/react": "~19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.2.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "expo lint"
+    "data:generate": "node scripts/generate-legal-data.mjs",
+    "dev": "pnpm data:generate && next dev",
+    "build": "pnpm data:generate && next build",
+    "start": "next start",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }
