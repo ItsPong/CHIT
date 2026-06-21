@@ -17,7 +17,7 @@ const navigation = [
 ];
 
 const pageAnnouncements: Record<string, string> = {
-  '/': 'Memasuki halaman beranda. Selamat datang di CHIT. CHIT membantu pengguna tunanetra mencari, mendengarkan, dan menyimpan materi hukum. Fitur CHIT terdiri dari navigasi halaman menggunakan suara, mencari hukum menggunakan suara, meminta bantuan melalui menu bantuan, dan menyimpan pasal hukum di koleksi.',
+  '/': 'Memasuki halaman beranda. Selamat datang di CHIT. CHIT membantu pengguna tunanetra mencari, mendengarkan, dan menyimpan materi hukum. Fitur CHIT terdiri dari navigasi halaman menggunakan suara, mencari hukum menggunakan suara, meminta bantuan melalui menu bantuan, dan menyimpan pasal hukum di koleksi. Sebagai panduan, tombol mikrofon untuk navigasi suara berada di bagian kanan atas layar.',
   '/pencarian':
     'Memasuki halaman pencarian. Tekan tombol mikrofon untuk mencari hukum dengan suara.',
   '/koleksi':
