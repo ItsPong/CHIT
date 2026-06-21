@@ -560,6 +560,7 @@ input:focus-visible {
   padding: 16px;
 }
 
+.result-card__content,
 .saved-card__content {
   display: block;
   width: 100%;
@@ -603,6 +604,7 @@ input:focus-visible {
   line-height: 1.55;
 }
 
+.result-card__content > span,
 .saved-card__content > span,
 .contact-card__listen {
   display: inline-flex;

@@ -39,29 +39,31 @@ function ResultCard({
 
   return (
     <article className="result-card">
-      <p className="result-card__topic">
-        {(category ?? 'Materi hukum terkait').toUpperCase()}
-      </p>
-      <h3>{material.shortTitle}</h3>
-      <p className="result-card__status">
-        Status: {material.status.replaceAll('_', ' ')}
-      </p>
-      <p className="result-card__summary">{material.summary}</p>
+      <button className="result-card__content" onClick={onListen}>
+        <p className="result-card__topic">
+          {(category ?? 'Materi hukum terkait').toUpperCase()}
+        </p>
+        <h3>{material.shortTitle}</h3>
+        <p className="result-card__status">
+          Status: {material.status.replaceAll('_', ' ')}
+        </p>
+        <p className="result-card__summary">{material.summary}</p>
 
-      {shortAnswer && (
-        <div className="short-answer">
-          <strong>Jawaban singkat</strong>
-          <p>{shortAnswer}</p>
-        </div>
-      )}
+        {shortAnswer && (
+          <div className="short-answer">
+            <strong>Jawaban singkat</strong>
+            <p>{shortAnswer}</p>
+          </div>
+        )}
 
-      <p className="result-card__count">
-        {articles.length} pasal atau kelompok pasal relevan
-      </p>
+        <p className="result-card__count">
+          {articles.length} pasal atau kelompok pasal relevan
+        </p>
 
-      <button className="button button--primary button--full" onClick={onListen}>
-        <Icon name="volume" width={19} height={19} />
-        Dengarkan
+        <span>
+          <Icon name="volume" width={18} height={18} />
+          Tekan untuk dengarkan pasal
+        </span>
       </button>
 
       <div className="button-row">
