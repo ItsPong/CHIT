@@ -78,7 +78,7 @@ export function playActivationTone() {
   oscillator.frequency.setValueAtTime(740, now);
   oscillator.frequency.exponentialRampToValueAtTime(980, now + 0.12);
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
 
   oscillator.connect(gain);
