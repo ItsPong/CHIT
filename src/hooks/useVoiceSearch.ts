@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 
-import { requestMicrophonePermission, speak } from '@/services/speech';
+import { requestMicrophonePermission, speak, stopSpeaking } from '@/services/speech';
 
 type VoiceSearchOptions = {
   onResult: (transcript: string) => void;
@@ -81,6 +81,7 @@ export default function useVoiceSearch({
       return;
     }
 
+    stopSpeaking();
     setIsListening(true);
     const prompt = 'Perintah suara aktif. Setelah bunyi selesai, silakan bicara.';
     onStatusChange(prompt);
