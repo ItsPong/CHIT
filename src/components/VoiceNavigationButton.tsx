@@ -107,10 +107,12 @@ export default function VoiceNavigationButton() {
   const [isListening, setIsListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop();
+      if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
     };
   }, []);
 
