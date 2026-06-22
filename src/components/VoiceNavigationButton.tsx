@@ -8,6 +8,7 @@ import {
   playActivationTone,
   requestMicrophonePermission,
   speak,
+  stopSpeaking,
   unlockSpeech,
 } from '@/services/speech';
 
@@ -123,6 +124,7 @@ export default function VoiceNavigationButton() {
       return;
     }
 
+    stopSpeaking();
     setIsListening(true);
     setMessage('Mikrofon aktif. Silakan sebutkan halaman tujuan.');
     unlockSpeech();
