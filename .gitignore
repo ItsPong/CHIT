@@ -23,4 +23,7 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# vercel
 .vercel
+

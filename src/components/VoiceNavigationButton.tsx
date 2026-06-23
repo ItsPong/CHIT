@@ -8,6 +8,7 @@ import {
   playActivationTone,
   requestMicrophonePermission,
   speak,
+  stopSpeaking,
   unlockSpeech,
 } from '@/services/speech';
 
@@ -106,10 +107,12 @@ export default function VoiceNavigationButton() {
   const [isListening, setIsListening] = useState(false);
   const [message, setMessage] = useState('');
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const promptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {
       recognitionRef.current?.stop();
+      if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
     };
   }, []);
 
@@ -123,94 +126,124 @@ export default function VoiceNavigationButton() {
       return;
     }
 
+    stopSpeaking();
     setIsListening(true);
-    setMessage('Mikrofon aktif. Silakan sebutkan halaman tujuan.');
+    const prompt = 'Perintah suara aktif, segera berbicara.';
+    setMessage(prompt);
     unlockSpeech();
-    playActivationTone();
 
-    try {
-      await requestMicrophonePermission();
-    } catch {
-      const response =
-        'Izin mikrofon ditolak. Aktifkan izin mikrofon pada pengaturan browser lalu coba lagi.';
-      setMessage(response);
-      setIsListening(false);
-      speak(response);
-      return;
-    }
+    let recognitionStarted = false;
+    let permissionReady = false;
+    let promptFinished = false;
 
-    const recognition = new Recognition();
-    recognition.lang = 'id-ID';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 3;
-    recognitionRef.current = recognition;
+    const beginRecognition = () => {
+      if (recognitionStarted || !permissionReady || !promptFinished) return;
+      recognitionStarted = true;
+      if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
 
-    recognition.onresult = (event) => {
-      const alternatives = Array.from(event.results[0])
-        .map((result) => result.transcript.toLowerCase().trim())
-        .filter(Boolean);
-      const matchedCommand = alternatives
-        .map((transcript) => ({
-          transcript,
-          destination: commandDestination(transcript),
-        }))
-        .find((command) => command.destination);
+      const recognition = new Recognition();
+      recognition.lang = 'id-ID';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 3;
+      recognitionRef.current = recognition;
 
-      if (matchedCommand?.destination) {
-        setMessage(`Perintah dikenali: ${matchedCommand.transcript}.`);
-        if (matchedCommand.destination === pathname) {
-          speak(`Anda sudah berada di halaman ${destinationName(pathname)}.`);
-        } else {
-          const destination = matchedCommand.destination;
-          let navigated = false;
-          const navigate = () => {
-            if (navigated) return;
-            navigated = true;
-            router.push(destination);
-          };
+      recognition.onresult = (event) => {
+        const alternatives = Array.from(event.results[0])
+          .map((result) => result.transcript.toLowerCase().trim())
+          .filter(Boolean);
+        const matchedCommand = alternatives
+          .map((transcript) => ({
+            transcript,
+            destination: commandDestination(transcript),
+          }))
+          .find((command) => command.destination);
 
-          const announced = speak(
-            `Menuju halaman ${destinationName(destination)}.`,
-            { onEnd: navigate }
-          );
-
-          if (announced) {
-            window.setTimeout(navigate, 1800);
+        if (matchedCommand?.destination) {
+          setMessage(`Perintah dikenali: ${matchedCommand.transcript}.`);
+          if (matchedCommand.destination === pathname) {
+            speak(`Anda sudah berada di halaman ${destinationName(pathname)}.`);
           } else {
-            navigate();
+            const destination = matchedCommand.destination;
+            let navigated = false;
+            const navigate = () => {
+              if (navigated) return;
+              navigated = true;
+              router.push(destination);
+            };
+
+            const announced = speak(
+              `Menuju halaman ${destinationName(destination)}.`,
+              { onEnd: navigate }
+            );
+
+            if (announced) {
+              window.setTimeout(navigate, 1800);
+            } else {
+              navigate();
+            }
           }
+        } else {
+          const response =
+            'Perintah tidak dikenali. Coba sebutkan beranda, cari, koleksi, atau bantuan.';
+          setMessage(response);
+          speak(response);
         }
-      } else {
+      };
+
+      recognition.onerror = (event) => {
         const response =
-          'Perintah tidak dikenali. Coba sebutkan beranda, cari, koleksi, atau bantuan.';
+          event.error === 'not-allowed'
+            ? 'Izin mikrofon ditolak. Aktifkan izin lalu coba lagi.'
+            : event.error === 'no-speech'
+              ? 'Tidak ada suara yang terdengar. Tekan tombol mikrofon lalu coba lagi.'
+              : 'Suara belum berhasil dikenali. Silakan coba lagi.';
         setMessage(response);
+        setIsListening(false);
+        speak(response);
+      };
+
+      recognition.onend = () => {
+        recognitionRef.current = null;
+        setIsListening(false);
+      };
+
+      try {
+        playActivationTone();
+        recognition.start();
+      } catch {
+        const response =
+          'Mikrofon belum dapat dinyalakan. Tutup aplikasi lain yang memakai mikrofon lalu coba lagi.';
+        setMessage(response);
+        setIsListening(false);
         speak(response);
       }
     };
 
-    recognition.onerror = (event) => {
-      const response =
-        event.error === 'not-allowed'
-          ? 'Izin mikrofon ditolak. Aktifkan izin lalu coba lagi.'
-          : event.error === 'no-speech'
-            ? 'Tidak ada suara yang terdengar. Tekan tombol mikrofon lalu coba lagi.'
-            : 'Suara belum berhasil dikenali. Silakan coba lagi.';
-      setMessage(response);
-      setIsListening(false);
-      speak(response);
-    };
+    const announced = speak(prompt, {
+      onEnd: () => {
+        promptFinished = true;
+        beginRecognition();
+      },
+    });
 
-    recognition.onend = () => {
-      recognitionRef.current = null;
-      setIsListening(false);
-    };
+    if (announced) {
+      promptTimerRef.current = setTimeout(() => {
+        promptFinished = true;
+        beginRecognition();
+      }, 3000);
+    } else {
+      promptFinished = true;
+    }
 
     try {
-      recognition.start();
+      await requestMicrophonePermission();
+      permissionReady = true;
+      beginRecognition();
     } catch {
+      if (promptTimerRef.current) clearTimeout(promptTimerRef.current);
       const response =
-        'Mikrofon belum dapat dinyalakan. Tutup aplikasi lain yang memakai mikrofon lalu coba lagi.';
+        'Izin mikrofon ditolak. Aktifkan izin mikrofon pada pengaturan browser lalu coba lagi.';
       setMessage(response);
       setIsListening(false);
       speak(response);
